@@ -193,14 +193,10 @@ class ApiInfoService
             }
             $doc = $this->scanDocument($className);
             $classDoc = array_values(array_filter(explode('*', str_replace([' ', "\n", "/"], '', $doc))));
-            // echo $classDoc[0], "\n";
-            // var_dump($classDoc);
             $routes[$key]['className'] = $className;
             $routes[$key]['classDoc'] = $classDoc[0];
             $subDoc = $this->scanDocument($className, $methodName);
             $methodDoc = array_values(array_filter(explode('*', str_replace([' ', "\n", "/"], '', $subDoc))));
-            // echo "{$subDoc}\n";
-            // var_dump($methodDoc);
             $routes[$key]['methodName'] = $methodName;
             $routes[$key]['methodDoc'] = $methodDoc[0];
         }
