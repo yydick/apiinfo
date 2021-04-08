@@ -73,17 +73,35 @@ class ApiInfoController extends Controller
      */
     public function test(): array
     {
-        $classes = $this->service->scanRoutes();
-        // var_dump($classes);
-        // foreach ($classes as $className) {
-        //     $doc = $this->service->scanDocument($className);
-        //     if (is_string($doc)) {
-        //         echo $doc, "<br />\n";
-        //     } else if (is_array($doc)) {
-        //         var_dump($doc);
-        //     }
-        // }
-        return $classes;
+        $routes = $this->service->scanLaravelRoutes();
+        foreach ($routes as $key => $route) {
+            $controller = $route['controller'];
+            if (is_array($controller)) {
+                $className = get_class($controller[0]);
+                $methodName = $controller[1];
+            } elseif (is_string($controller)) {
+                $separator = '@';
+                if (stripos('::', $controller) != false) {
+                    $separator = '::';
+                }
+                $callback = explode($separator, $controller);
+                $className = $callback[0];
+                $methodName = $callback[1];
+            }
+            $doc = $this->service->scanDocument($className);
+            $classDoc = array_values(array_filter(explode('*', str_replace([' ', "\n", "/"], '', $doc))));
+            // echo $classDoc[0], "\n";
+            // var_dump($classDoc);
+            $routes[$key]['className'] = $className;
+            $routes[$key]['classDoc'] = $classDoc[0];
+            $subDoc = $this->service->scanDocument($className, $methodName);
+            $methodDoc = array_values(array_filter(explode('*', str_replace([' ', "\n", "/"], '', $subDoc))));
+            // echo "{$subDoc}\n";
+            // var_dump($methodDoc);
+            $routes[$key]['methodName'] = $methodName;
+            $routes[$key]['methodDoc'] = $methodDoc[0];
+        }
+        return $routes;
     }
     /**
      * 内容页

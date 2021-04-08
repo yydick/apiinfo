@@ -99,7 +99,7 @@ class ApiInfoService
      * 
      * @return array
      */
-    public function scanRoutes(): array
+    public function scanLaravelRoutes(): array
     {
         /**
          * @var \Illuminate\Routing\RouteCollection
@@ -122,11 +122,10 @@ class ApiInfoService
             }
             $configPrefix = config("apiinfo.prefix");
             if ($configPrefix) {
-                // var_dump($prefix, $configPrefix);
                 if (
                     is_string($configPrefix) &&
                     (!$prefix ||
-                        $prefix != $configPrefix)
+                    $prefix != $configPrefix)
                 ) {
                     continue;
                 } elseif (is_array($configPrefix)) {
@@ -143,27 +142,69 @@ class ApiInfoService
                 'namespace' => $action['namespace'] ?? null
             ];
         }
-        // var_dump($routes->getRoutes());
         return $routess;
     }
     /**
      * 扫描控制器生产文档
      * 
-     * @param string $className 控制器对象
+     * @param string $className 控制器类名
+     * @param string $method    方法名
+     * 
+     * @return string
+     */
+    public function scanDocument(string $className, string $method = ''): string
+    {
+        $doc = '';
+        try {
+            $rc = $method ? 
+            new ReflectionMethod($className, $method) :
+            new ReflectionClass($className);
+            $doc = $rc->getDocComment();
+        } catch (\ReflectionException $e) {
+            throw $e;
+        }
+        return $doc;
+    }
+    /**
+     * 返回文档左侧树图
+     * 框架默认为laravel, 后续会支持更多框架
+     * 
+     * @param string $framework 框架名称
      * 
      * @return array
      */
-    public function scanDocument(string $className)
+    public function getDocTree(string $framework = ''): array
     {
-        $rc = new ReflectionClass($className);
-        $doc = $rc->getDocComment();
-        $methods = $rc->getMethods(ReflectionMethod::IS_PUBLIC);
-        echo "<br/>";
-        foreach ($methods as $method) {
-            $methodDoc = $method->getDocComment();
-            echo "{$methodDoc}<br />";
+        $tree = [];
+        $routes = $this->scanLaravelRoutes();
+        foreach ($routes as $key => $route) {
+            $controller = $route['controller'];
+            if (is_array($controller)) {
+                $className = get_class($controller[0]);
+                $methodName = $controller[1];
+            } elseif (is_string($controller)) {
+                $separator = '@';
+                if (stripos('::', $controller) != false) {
+                    $separator = '::';
+                }
+                $callback = explode($separator, $controller);
+                $className = $callback[0];
+                $methodName = $callback[1];
+            }
+            $doc = $this->scanDocument($className);
+            $classDoc = array_values(array_filter(explode('*', str_replace([' ', "\n", "/"], '', $doc))));
+            // echo $classDoc[0], "\n";
+            // var_dump($classDoc);
+            $routes[$key]['className'] = $className;
+            $routes[$key]['classDoc'] = $classDoc[0];
+            $subDoc = $this->scanDocument($className, $methodName);
+            $methodDoc = array_values(array_filter(explode('*', str_replace([' ', "\n", "/"], '', $subDoc))));
+            // echo "{$subDoc}\n";
+            // var_dump($methodDoc);
+            $routes[$key]['methodName'] = $methodName;
+            $routes[$key]['methodDoc'] = $methodDoc[0];
         }
-        // var_dump($doc);
-        return $doc;
+        $tree = $routes;
+        return $tree;
     }
 }

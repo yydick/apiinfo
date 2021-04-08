@@ -6,7 +6,7 @@ return [
     /**
      * 要扫描的路由前缀
      */
-    'prefix' => ['apiinfo', ''],
+    'prefix' => ['apiinfo'],
     /**
      * 要扫描的路由命名空间, 暂时保留
      */
