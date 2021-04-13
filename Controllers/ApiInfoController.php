@@ -2,11 +2,11 @@
 
 /**
  * ApiInfo控制器
- * 
+ *
  * Class ApiInfoController 控制器
- * 
+ *
  * PHP version 7.2
- * 
+ *
  * @category Spool
  * @package  ApiInfo
  * @author   yydick Chen <yydick@sohu.com>
@@ -25,11 +25,11 @@ use Spool\ApiInfo\Services\ApiInfoService;
 
 /**
  * ApiInfo控制器
- * 
+ *
  * Class ApiInfoController 控制器
- * 
+ *
  * PHP version 7.2
- * 
+ *
  * @category Spool
  * @package  ApiInfo
  * @author   yydick Chen <yydick@sohu.com>
@@ -54,17 +54,32 @@ class ApiInfoController extends Controller
     }
     /**
      * 首页
+     *
+     * @param Request $request 请求类
      * 
      * @return void
      */
-    public function index()
+    public function index(Request $request)
     {
-        $controllerPath = config("apiinfo.prefix");
+        $trees = $this->service->getDocTree();
+        $urlAll = $request->url();
+        $urlInfo = parse_url($urlAll);
+        // var_dump($urlInfo);
+        $url = $urlInfo['scheme'] . '://' . $urlInfo['host'] . '/';
         $data = [
-            'test' => 'I am test!',
-            'controllerPath' => $controllerPath
+            'trees' => $trees,
+            'url' => $url
         ];
         return view('vendor.apiinfo.apiinfo', $data);
+    }
+    /**
+     * Welcome page
+     * 
+     * @return void
+     */
+    public function welcome()
+    {
+        return view('vendor.apiinfo.welcome');
     }
     /**
      * 测试信息
@@ -73,34 +88,7 @@ class ApiInfoController extends Controller
      */
     public function test(): array
     {
-        $routes = $this->service->scanLaravelRoutes();
-        foreach ($routes as $key => $route) {
-            $controller = $route['controller'];
-            if (is_array($controller)) {
-                $className = get_class($controller[0]);
-                $methodName = $controller[1];
-            } elseif (is_string($controller)) {
-                $separator = '@';
-                if (stripos('::', $controller) != false) {
-                    $separator = '::';
-                }
-                $callback = explode($separator, $controller);
-                $className = $callback[0];
-                $methodName = $callback[1];
-            }
-            $doc = $this->service->scanDocument($className);
-            $classDoc = array_values(array_filter(explode('*', str_replace([' ', "\n", "/"], '', $doc))));
-            // echo $classDoc[0], "\n";
-            // var_dump($classDoc);
-            $routes[$key]['className'] = $className;
-            $routes[$key]['classDoc'] = $classDoc[0];
-            $subDoc = $this->service->scanDocument($className, $methodName);
-            $methodDoc = array_values(array_filter(explode('*', str_replace([' ', "\n", "/"], '', $subDoc))));
-            // echo "{$subDoc}\n";
-            // var_dump($methodDoc);
-            $routes[$key]['methodName'] = $methodName;
-            $routes[$key]['methodDoc'] = $methodDoc[0];
-        }
+        $routes = $this->service->getDocTree();
         return $routes;
     }
     /**
@@ -109,12 +97,35 @@ class ApiInfoController extends Controller
      * @param ApiInfoContentsRequest $request 请求的格式类
      * 
      * @return void
+     * 
+     * @version 1.0.0
      */
     public function contents(ApiInfoContentsRequest $request)
     {
         $group = $request->group;
         $name = $request->name;
-        var_dump($request->all());
-        return "content: group is {$group}, name is {$name}!";
+        // var_dump($request->all());
+        $doc = $this->service->getDocSearch($request);
+        ini_set('xdebug.var_display_max_depth', 6);
+        var_dump($doc);
+        // return "content: group is {$group}, name is {$name}!";
+        $data = $doc;
+        return view('vendor.apiinfo.contents', $data);
+    }
+    /**
+     * 搜索Api
+     * 
+     * @param Request $request 依赖注入
+     * @param integer $i       测试变量1
+     * @param string  $f       测试变量2
+     * 
+     * @return array
+     * 
+     * @example {'code':0,'msg':'success','data':{'total':132,'page':1,'pagesize':10,'list':[{'id':1,'name':'foo'},{'id':2,'name':'bar'}]}} 成功
+     * @example location description
+     */
+    public function search(Request $request, int $i, string $f = 'file'): array
+    {
+        return [];
     }
 }

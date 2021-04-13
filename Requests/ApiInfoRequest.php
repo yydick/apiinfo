@@ -32,7 +32,7 @@ use Illuminate\Http\Exceptions\HttpResponseException;
  * @link     http://url.com
  * @DateTime 2021-03-27
  */
-class ApiInfoContentsRequest extends FormRequest
+class ApiInfoRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -52,8 +52,7 @@ class ApiInfoContentsRequest extends FormRequest
     public function rules()
     {
         return [
-            'group' => 'nullable|string',
-            'name' => 'nullable|string',
+            'field' => 'nullable',
         ];
     }
     
@@ -65,8 +64,7 @@ class ApiInfoContentsRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'group' => '要调用的组',
-            'name' => '要调用的名称',
+            'field' => '输入的字段名',
         ];
     }
 
@@ -78,8 +76,7 @@ class ApiInfoContentsRequest extends FormRequest
     public function attributes(): array
     {
         return [
-            'group' => 'group',
-            'name' => 'name',
+            'field' => 'field',
         ];
     }
     /**
@@ -99,7 +96,7 @@ class ApiInfoContentsRequest extends FormRequest
         $response = response()->json([
             'code' => 0,
             'msg'  => $error,
-            // 'data' => null,
+            'data' => null,
         ]);
  
         throw new HttpResponseException($response);
