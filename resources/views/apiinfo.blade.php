@@ -69,6 +69,7 @@
          <iframe src="/apiinfo/welcome" id="mainFrame" name="mainFrame" frameborder="0" width="100%"  height="100%" frameBorder="0"></iframe>
      </div>
  </div>
+
  <!-- 底部页脚部分 -->
  <div class="footer">
      <p class="text-center">

@@ -23,6 +23,8 @@ use App\Http\Controllers\Controller;
 use Spool\ApiInfo\Requests\ApiInfoContentsRequest;
 use Spool\ApiInfo\Services\ApiInfoService;
 
+use Illuminate\Http\Response;
+
 /**
  * ApiInfo控制器
  *
@@ -56,7 +58,7 @@ class ApiInfoController extends Controller
      * 首页
      *
      * @param Request $request 请求类
-     * 
+     *
      * @return void
      */
     public function index(Request $request)
@@ -74,7 +76,7 @@ class ApiInfoController extends Controller
     }
     /**
      * Welcome page
-     * 
+     *
      * @return void
      */
     public function welcome()
@@ -83,44 +85,51 @@ class ApiInfoController extends Controller
     }
     /**
      * 测试信息
-     * 
-     * @return array
+     *
+     * @return void
      */
-    public function test(): array
+    public function test()
     {
         $routes = $this->service->getDocTree();
-        return $routes;
+        // return $routes;
+        return view('vendor.apiinfo.test');
     }
     /**
      * 内容页
-     * 
+     *
      * @param ApiInfoContentsRequest $request 请求的格式类
-     * 
+     *
      * @return void
-     * 
+     *
      * @version 1.0.0
      */
     public function contents(ApiInfoContentsRequest $request)
     {
-        $group = $request->group;
-        $name = $request->name;
-        // var_dump($request->all());
         $doc = $this->service->getDocSearch($request);
         ini_set('xdebug.var_display_max_depth', 6);
         var_dump($doc);
-        // return "content: group is {$group}, name is {$name}!";
+        $jsonStr = '';
+        if (is_array($doc['docExample'])) {
+            $jsonStr = $this->getJsonFormatArray(
+                $this->service->jsonFormatByString(
+                    $doc['docExample'][0]['location']
+                )
+            );
+            echo ($jsonStr);
+        }
         $data = $doc;
+        $data['jsonStr'] = $jsonStr;
         return view('vendor.apiinfo.contents', $data);
     }
     /**
      * 搜索Api
-     * 
+     *
      * @param Request $request 依赖注入
      * @param integer $i       测试变量1
      * @param string  $f       测试变量2
-     * 
+     *
      * @return array
-     * 
+     *
      * @example {'code':0,'msg':'success','data':{'total':132,'page':1,'pagesize':10,'list':[{'id':1,'name':'foo'},{'id':2,'name':'bar'}]}} 成功
      * @example location description
      */

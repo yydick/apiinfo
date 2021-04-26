@@ -114,13 +114,15 @@ class ApiInfoService
         $routess = [];
 
         $configPrefix = config("apiinfo.{$modelName}.prefix");
-
+        // var_dump($configPrefix);
         foreach ($routes as $route) {
             // var_dump($route);
             $action = $route->getAction();
             $method = $route->methods;
             $uri = $route->uri;
-            $prefix = $action['prefix'] ?: '';
+            // $prefix = $action['prefix'] ?: '';
+            $prefix = explode('/', $uri)[0];
+            // var_dump($prefix, $configPrefix);
             if (
                 !isset($action['controller']) ||
                 \substr($uri, 0, strlen('_ignition')) === '_ignition'
@@ -130,11 +132,12 @@ class ApiInfoService
             if ($configPrefix) {
                 if (
                     is_string($configPrefix) &&
-                    (!$prefix ||
-                        $prefix != $configPrefix)
+                    (!$prefix || $prefix != $configPrefix)
                 ) {
                     continue;
-                } elseif (is_array($configPrefix)) {
+                }
+                // var_dump($prefix, $configPrefix);
+                if (is_array($configPrefix)) {
                     if (!in_array($prefix, $configPrefix, true)) {
                         continue;
                     }
@@ -188,6 +191,7 @@ class ApiInfoService
             $treeApiName = $routeInfo['treeApiName'];
             $tree[$treeGroupName][$treeApiName] = $routeInfo;
         }
+        // var_dump($tree);
         // $tree = $routes;
         return $tree;
     }
@@ -205,9 +209,10 @@ class ApiInfoService
     ): array {
         $group = $request->group ?? '';
         $name = $request->name ?? '';
+        $modelName = $request->modelName ?? 'default';
         $routes = [];
         if (!$framework || 'laravel' == strtolower($framework)) {
-            $routes = $this->scanLaravelRoutes();
+            $routes = $this->scanLaravelRoutes($modelName);
         }
         foreach ($routes as $key => $route) {
             $controller = $route['controller'];
@@ -224,7 +229,18 @@ class ApiInfoService
                 $methodName = $callback[1];
             }
             $doc = $this->scanDocument($className);
-            $classDoc = array_values(array_filter(explode('*', str_replace([' ', "\n", "/"], '', $doc))));
+            $classDoc = array_values(
+                array_filter(
+                    explode(
+                        '*',
+                        str_replace(
+                            [' ', "\n", "/"],
+                            '',
+                            $doc
+                        )
+                    )
+                )
+            );
             $classGroup = explode('\\', $className);
             $subDoc = $this->scanDocument($className, $methodName);
             $methodDoc = array_values(array_filter(explode('*', str_replace(["\n", "/"], '', $subDoc)), "trim"));
@@ -250,7 +266,7 @@ class ApiInfoService
             $routes[$key]['classDoc'] = $classDoc[0];
             $routes[$key]['classGroup'] = end($classGroup);
             $routes[$key]['methodName'] = $methodName;
-            $routes[$key]['methodDoc'] = trim($methodDoc[0]);
+            $routes[$key]['methodDoc'] = trim($methodDoc[0] ?? '') ?: $methodName;
             $routes[$key]['apiGroup'] = $apiGroup;
             $routes[$key]['apiName'] = $apiName;
             $routes[$key]['treeGroupName'] = $apiGroup ?: $classDoc[0];
@@ -274,10 +290,10 @@ class ApiInfoService
     }
     /**
      * 获取类方法的参数和返回值
-     * 
+     *
      * @param string $className  类名
      * @param string $methodName 方法名
-     * 
+     *
      * @return array
      */
     public function getMethodParams(string $className, string $methodName): array
@@ -335,11 +351,12 @@ class ApiInfoService
                 $tmp['required'] = 'nullable';
             }
             if (!in_array($type, [
-                'int', 
+                'int',
                 'string',
                 'bool',
                 'folat',
-                'mixed'
+                'mixed',
+                'array'
             ], true)) {
                 $objParams = $this->getClassProperties($type);
                 $data['params'] = array_merge($data['params'], $objParams);
@@ -354,9 +371,9 @@ class ApiInfoService
     }
     /**
      * 返回类的属性列表
-     * 
+     *
      * @param string $className 要查的类名
-     * 
+     *
      * @return array
      */
     public function getClassProperties(string $className): array
@@ -392,5 +409,97 @@ class ApiInfoService
             }
         }
         return $data;
+    }
+    /**
+     * 格式化json字符串
+     *
+     * @param array $arr 要格式化的数组
+     *
+     * @return string
+     */
+    public function getJsonFormatArray(array $arr): string
+    {
+        // \var_dump($arr);
+        $jsonStr = json_encode(
+            $this->jsonFormatByArray($arr),
+            \JSON_UNESCAPED_UNICODE
+        );
+        // \var_dump($jsonStr);
+        $format = \str_replace('{', "{\n", $jsonStr);
+        $format = \str_replace('[', "[\n", $format);
+        $format = \str_replace(',', ",\n", $format);
+        $format = \str_replace('\"', "\"", $format);
+        $format = \str_replace(']', "]\n", $format);
+        $format = \str_replace('}', "}\n", $format);
+        $format = \str_replace('\/', "\\", $format);
+        return $format;
+    }
+    /**
+     * 格式化json字符串
+     *
+     * @param string $string 要格式化的字符串
+     *
+     * @return string
+     */
+    public function getJsonFormatString(string $string): string
+    {
+        $format = \str_replace('{', "{\n", $string);
+        $format = \str_replace('[', "[\n", $format);
+        $format = \str_replace(',', ",\n", $format);
+        $format = \str_replace('\"', "\"", $format);
+        $format = \str_replace(']', "]\n", $format);
+        $format = \str_replace('}', "}\n", $format);
+        $format = \str_replace('\/', "\\", $format);
+        return $format;
+    }
+    /**
+     * 将字符串格式化为可是胡的json
+     *
+     * @param string $str 要格式化的json字符串
+     *
+     * @return string
+     */
+    public function jsonFormatByString(string $str): array
+    {
+        $arr = json_decode($str, true);
+        if (!$arr) {
+            return [];
+        }
+        return $this->jsonFormatByArray($arr);
+    }
+    /**
+     * 将数组格式化为可视化的json
+     *
+     * @param array $arr 要格式化的数组
+     *
+     * @return string
+     */
+    protected function jsonFormatByArray(array $arr): array
+    {
+        $json = [];
+        foreach ($arr as $key => $value) {
+            $formatKey = $key;
+            if (is_string($key)) {
+                $formatKey = '<span class=key>\'' . $key . '\'</span>';
+            }
+            if (is_array($value)) {
+                $formatValue = $this->jsonFormatByArray($value);
+                $json[$formatKey] = $formatValue;
+                continue;
+            }
+            $cls = 'number';
+            if (is_string($value)) {
+                $cls = 'string';
+            }
+            if (is_bool($value)) {
+                $cls = 'boolean';
+            }
+            if (is_null($value)) {
+                $cls = 'null';
+            }
+            $formatValue = '<span class=' . $cls . '>\'' . $value . '\'</span>';
+            $json[$formatKey] = $formatValue;
+        }
+        return $json;
     }
 }
