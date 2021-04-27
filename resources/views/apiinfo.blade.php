@@ -40,7 +40,7 @@
      <!-- 左侧导航栏 -->
      <div class="pageSidebar">
      <div class="form-group">
-        <input type="text" class="form-control" id="search" value="请输入..." style="margin: 10px 50px 10px 10px; overflow: hidden; width: inherit;" />
+        <input type="text" class="form-control" id="search" value="请输入..." style="margin: 10px 50px 10px 10px; overflow: hidden; width: 90%;" />
      </div>
          <ul class="nav nav-stacked nav-pills">
              <li role="presentation" class="active">

@@ -213,11 +213,11 @@ function syntaxHighlight(json) {
     </script>
     @endforeach
     <h3>发送示例请求</h3>
-    <form style="display: inline;">
+    <form style="display: inline;" method="{{$method}}" action="/{{$uri}}">
         <fieldset>
             <h3>参数</h3>
-            <h4><input type="checkbox" data-sample-request-param-group-id="sample-request-param-0" name="UserCentre-getEducationExperience-1_0_1-sample-request-param" value="0" class="sample-request-param sample-request-switch" checked="">参数
-              <select name="UserCentre-getEducationExperience-1_0_1-sample-header-content-type" class="UserCentre-getEducationExperience-1_0_1-sample-request-param-select sample-header-content-type sample-header-content-type-switch">
+            <h4><input type="checkbox" data-sample-request-param-group-id="sample-request-param-0" name="param" value="0" class="sample-request-param sample-request-switch" checked="">参数
+              <select name="method" class="sample-header-content-type sample-header-content-type-switch">
                 <option value="undefined" selected="">ajax-auto</option>
                 <option value="body-json">body/json</option>
                 <option value="body-form-data">body/form-data</option>
@@ -234,7 +234,7 @@ function syntaxHighlight(json) {
             @endforeach
             <div class="form-group">
                 <div class="controls pull-right">
-                <button class="btn btn-primary">发送</button>
+                <button class="btn btn-primary" type="submit">发送</button>
                 </div>
           </div>
         </fieldset>
@@ -245,41 +245,8 @@ function syntaxHighlight(json) {
 </div>
 
 <script type="text/javascript">
-
-    var songResJson={
-
-          "service": "ALL",
-
-          "qt": 581,
-
-          "content": {
-
-            "answer": {
-
-              "song": "你能看到我",
-
-              "album": "是的,我看见了",
-
-              "artist": "啊哈......",
-
-              "pic_url": "http://p1.music.126.net/-u3WgIXsFNCW7d8Jy7pCEA==/5921969627395387.jpg"
-
-            },
-
-            "scene": "music",
-            "array": [
-                {"log": 123}
-            ]
-
-          }
-
-        }
-
-        // document.getElementById('result').innerHTML = syntaxHighlight(songResJson);
-
     $('#resultExample').html(syntaxHighlight({!! $returnDoc !!}));
     // $('#result').html(syntaxHighlight(songResJson));
-
 </script>
 
 

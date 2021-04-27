@@ -108,7 +108,7 @@ class ApiInfoController extends Controller
         $doc = $this->service->getDocSearch($request);
         // ini_set('xdebug.var_display_max_depth', 6);
         // var_dump($doc);
-        $jsonStr = $doc['docExample'][0]['location'];
+        // $jsonStr = $doc['docExample'][0]['location'];
         // if (is_array($doc['docExample'])) {
         //     $jsonStr = $this->service->getJsonFormatArray(
         //         $this->service->jsonFormatByString(
@@ -119,7 +119,7 @@ class ApiInfoController extends Controller
         // }
         $data = $doc;
         // $data['jsonStr'] = $jsonStr;
-        $data['jsonStr'] = $jsonStr;
+        // $data['jsonStr'] = $jsonStr;
         return view('vendor.apiinfo.contents', $data);
     }
     /**
