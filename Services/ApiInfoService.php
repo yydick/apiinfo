@@ -118,7 +118,13 @@ class ApiInfoService
         foreach ($routes as $route) {
             // var_dump($route);
             $action = $route->getAction();
-            $method = $route->methods;
+            $methods = count($route->methods);
+            $method = 'GET';
+            if ($methods == 1) {
+                $method = $route->methods[0];
+            } elseif ($methods > 3) {
+                $method = "ANY";
+            }
             $uri = $route->uri;
             // $prefix = $action['prefix'] ?: '';
             $prefix = explode('/', $uri)[0];
@@ -228,6 +234,13 @@ class ApiInfoService
                 $className = $callback[0];
                 $methodName = $callback[1];
             }
+            $classGroup = explode('\\', $className);
+            if (
+                ($group && end($classGroup) != $group) ||
+                ($name && $methodName != $name)
+            ) {
+                continue;
+            }
             $doc = $this->scanDocument($className);
             $classDoc = array_values(
                 array_filter(
@@ -241,7 +254,6 @@ class ApiInfoService
                     )
                 )
             );
-            $classGroup = explode('\\', $className);
             $subDoc = $this->scanDocument($className, $methodName);
             $methodDoc = array_values(array_filter(explode('*', str_replace(["\n", "/"], '', $subDoc)), "trim"));
             // echo "{$subDoc}\n";
@@ -267,12 +279,14 @@ class ApiInfoService
             $routes[$key]['classGroup'] = end($classGroup);
             $routes[$key]['methodName'] = $methodName;
             $routes[$key]['methodDoc'] = trim($methodDoc[0] ?? '') ?: $methodName;
-            $routes[$key]['apiGroup'] = $apiGroup;
-            $routes[$key]['apiName'] = $apiName;
+            $routes[$key]['apiGroup'] = $apiGroup ?: end($classGroup);
+            $routes[$key]['apiName'] = $apiName ?: $methodName;
             $routes[$key]['treeGroupName'] = $apiGroup ?: $classDoc[0];
             $routes[$key]['treeApiName'] = $apiName ?: $methodName;
             $routes[$key]['params'] = $params['params'];
             $routes[$key]['return'] = $params['return'];
+            $routes[$key]['returnDoc'] = $params['returnDoc'];
+            $routes[$key]['description'] = $params['description'];
             $routes[$key]['docParams'] = $params['docParams'];
             $routes[$key]['docReturn'] = $params['docReturn'];
             $routes[$key]['docExample'] = $params['docExample'];
@@ -299,12 +313,14 @@ class ApiInfoService
     public function getMethodParams(string $className, string $methodName): array
     {
         $data = $params = $docParams = $docExample = [];
-        $returnType = $docReturnType = $docVersion = '';
+        $returnType = $docReturnType = $docReturnDoc = $docVersion = '';
         $reflection = new ReflectionMethod($className, $methodName);
         $params = $reflection->getParameters();
         $returnType = $reflection->hasReturnType() ? $reflection->getReturnType()->getName() : 'void';
         $subDoc = $this->scanDocument($className, $methodName);
+        // \var_dump($subDoc);
         $methodDoc = array_values(array_filter(explode('*', str_replace(["\n", "/"], '', $subDoc)), "trim"));
+        $description = '';
         foreach ($methodDoc as $index => $doc) {
             $docTmp = [];
             $docArray = array_values(array_filter(explode(' ', trim($doc)), "trim"));
@@ -318,15 +334,22 @@ class ApiInfoService
                 continue;
             }
             if ($docArray[0] == '@return') {
-                $docReturnType = $docArray[1];
+                $docReturnType = $docArray[1] ?? 'void';
+                $docReturnDoc = $docArray[2] ?? '{"Document location":"@return mixed doc","format":"json"}';
+                continue;
             }
             if ($docArray[0] == '@example') {
                 $exampleTmp['location'] = $docArray[1];
                 $exampleTmp['description'] = $docArray[2];
                 $docExample[] = $exampleTmp;
+                continue;
             }
             if ($docArray[0] == '@version') {
                 $docVersion = $docArray[1];
+                continue;
+            }
+            if ($index) {
+                $description .= trim($doc) . "<br/>\n";
             }
         }
         $data['docParams'] = $docParams;
@@ -334,6 +357,8 @@ class ApiInfoService
         $data['docExample'] = $docExample;
         $data['docVersion'] = $docVersion;
         $data['return'] = $returnType;
+        $data['returnDoc'] = $docReturnDoc;
+        $data['description'] = $description;
         $data['params'] = [];
         /**
          * @var ReflectionParameter
@@ -346,6 +371,7 @@ class ApiInfoService
             $tmp['form'] = 'form';
             $tmp['required'] = 'required';
             $tmp['doc'] = '';
+            $tmp['defaultValue'] = null;
             if ($value->isDefaultValueAvailable()) {
                 $tmp['defaultValue'] = $value->getDefaultValue();
                 $tmp['required'] = 'nullable';
@@ -385,6 +411,7 @@ class ApiInfoService
         if ($obj instanceof FormRequest) {
             $rules = $reflect->hasMethod('rules') ? $obj->rules() : [];
             $messages = $reflect->hasMethod('messages') ? $obj->messages() : [];
+            $defaultValue = $reflect->hasMethod('getDefaultValue') ? $obj->getDefaultValue() : [];
             // var_dump($rules, $messages);
             foreach ($rules as $key => $value) {
                 $tmp['name'] = $key;
@@ -405,6 +432,7 @@ class ApiInfoService
                     $tmp['required'] = 'nullable';
                 }
                 $tmp['doc'] = $messages[$key] ?? '';
+                $tmp['defaultValue'] = $defaultValue[$key] ?? '无';
                 $data[$tmp['name']] = $tmp;
             }
         }
@@ -419,19 +447,13 @@ class ApiInfoService
      */
     public function getJsonFormatArray(array $arr): string
     {
-        // \var_dump($arr);
+        \var_dump($arr);
         $jsonStr = json_encode(
-            $this->jsonFormatByArray($arr),
+            $arr,
             \JSON_UNESCAPED_UNICODE
         );
         // \var_dump($jsonStr);
-        $format = \str_replace('{', "{\n", $jsonStr);
-        $format = \str_replace('[', "[\n", $format);
-        $format = \str_replace(',', ",\n", $format);
-        $format = \str_replace('\"', "\"", $format);
-        $format = \str_replace(']', "]\n", $format);
-        $format = \str_replace('}', "}\n", $format);
-        $format = \str_replace('\/', "\\", $format);
+        $format = $this->getJsonFormatString($jsonStr);
         return $format;
     }
     /**
@@ -450,6 +472,8 @@ class ApiInfoService
         $format = \str_replace(']', "]\n", $format);
         $format = \str_replace('}', "}\n", $format);
         $format = \str_replace('\/', "\\", $format);
+        $format = \str_replace('\'', "\"", $format);
+        \var_dump($format, $string);
         return $format;
     }
     /**

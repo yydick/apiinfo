@@ -106,18 +106,19 @@ class ApiInfoController extends Controller
     public function contents(ApiInfoContentsRequest $request)
     {
         $doc = $this->service->getDocSearch($request);
-        ini_set('xdebug.var_display_max_depth', 6);
-        var_dump($doc);
-        $jsonStr = '';
-        if (is_array($doc['docExample'])) {
-            $jsonStr = $this->getJsonFormatArray(
-                $this->service->jsonFormatByString(
-                    $doc['docExample'][0]['location']
-                )
-            );
-            echo ($jsonStr);
-        }
+        // ini_set('xdebug.var_display_max_depth', 6);
+        // var_dump($doc);
+        $jsonStr = $doc['docExample'][0]['location'];
+        // if (is_array($doc['docExample'])) {
+        //     $jsonStr = $this->service->getJsonFormatArray(
+        //         $this->service->jsonFormatByString(
+        //             $doc['docExample'][0]['location']
+        //         )
+        //     );
+        // echo ($jsonStr);
+        // }
         $data = $doc;
+        // $data['jsonStr'] = $jsonStr;
         $data['jsonStr'] = $jsonStr;
         return view('vendor.apiinfo.contents', $data);
     }
