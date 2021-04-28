@@ -23,8 +23,6 @@ use App\Http\Controllers\Controller;
 use Spool\ApiInfo\Requests\ApiInfoContentsRequest;
 use Spool\ApiInfo\Services\ApiInfoService;
 
-use Illuminate\Http\Response;
-
 /**
  * ApiInfo控制器
  *

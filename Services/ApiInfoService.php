@@ -390,7 +390,7 @@ class ApiInfoService
             } else {
                 $tmp['form'] = 'path';
             }
-            $data['params'][$tmp['name']] = $tmp;
+            $data['params'][] = $tmp;
         }
         // var_dump($className, $methodName, $params, $docParams);
         return $data;
@@ -433,7 +433,7 @@ class ApiInfoService
                 }
                 $tmp['doc'] = $messages[$key] ?? '';
                 $tmp['defaultValue'] = $defaultValue[$key] ?? '无';
-                $data[$tmp['name']] = $tmp;
+                $data[] = $tmp;
             }
         }
         return $data;

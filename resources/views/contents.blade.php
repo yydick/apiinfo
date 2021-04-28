@@ -213,7 +213,14 @@ function syntaxHighlight(json) {
     </script>
     @endforeach
     <h3>发送示例请求</h3>
-    <form style="display: inline;" method="{{$method}}" action="/{{$uri}}">
+    <ul class="nav nav-tabs nav-tabs-examples">
+        <li class="active">
+          <a href="Example">Response Test:</a>
+        </li>
+      </ul>
+    <pre class="pre" id="result" style="display: none;">
+    </pre>
+    <form style="display: inline;" onsubmit="return false;" id="form" method="{{$method}}" action="##">
         <fieldset>
             <h3>参数</h3>
             <h4><input type="checkbox" data-sample-request-param-group-id="sample-request-param-0" name="param" value="0" class="sample-request-param sample-request-switch" checked="">参数
@@ -223,6 +230,7 @@ function syntaxHighlight(json) {
                 <option value="body-form-data">body/form-data</option>
               </select>
             </h4>
+            <input type="hidden" name="_method" value="{{$method}}">
             @foreach ($params as $paramInfo)
             <div class="form-group">
                 <label class="col-md-3 control-label" for="example-params-{{$paramInfo['name']}}">{{$paramInfo['name']}} - [<span class="{{$paramInfo['required']}}">{{$paramInfo['required']}}</span>]</label>
@@ -234,19 +242,55 @@ function syntaxHighlight(json) {
             @endforeach
             <div class="form-group">
                 <div class="controls pull-right">
-                <button class="btn btn-primary" type="submit">发送</button>
+                <button class="btn btn-primary" onclick="doSends()">发送</button>
                 </div>
           </div>
         </fieldset>
     </form>
-    <pre class="pre" id="result" style="display: none;">
-    </pre>
-
 </div>
 
 <script type="text/javascript">
     $('#resultExample').html(syntaxHighlight({!! $returnDoc !!}));
     // $('#result').html(syntaxHighlight(songResJson));
+    function doSends(){
+        var url = window.parent.document.getElementById("baseUrl").value + "{{$uri}}";
+        console.log(url);
+        console.log($('#form').serialize());
+        // var data = {
+        //     @foreach ($params as $paramKey => $paramInfo)
+        //         "{{$paramInfo['name']}}":$("{{$paramInfo['name']}}").val(),
+        //     @endforeach
+        // }
+        // return false;
+        $.ajax({
+            url: url,
+            type: "{{$method}}",
+            data: $('#form').serialize(),
+            // data: {
+            //     "filter_platform":$("#filter_platform").val(),
+            //     "filter_accoount":$("#filter_accoount").val(),
+            //     "filter_project":$("#filter_project").val(),
+            //     "export_cvs":"export_cvs"
+            // },
+            beforeSend: function (xhr,settings) {
+                // xhr.setRequestHeader("X-CSRFtoken",$.cookie("csrftoken"));
+                // layer.msg('请求发送成中,请等待......', {icon: 4,time:600000});
+            },
+            success: function (data) {
+                $('#result').css('display','block');
+                $('#result').html(syntaxHighlight(data));
+                $('#result').tabIndex = 0;
+                // var h = $(document).height()-$(window).height();
+                // $(document).scrollTop(h);
+            },
+            complete: function () {
+                console.info("发送数据执行完成......");
+            },
+            error: function (data) {
+                console.info("发送数据执行出错......");
+            }
+        });
+    }
 </script>
 
 
