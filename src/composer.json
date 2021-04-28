@@ -14,6 +14,11 @@
     ],
     "minimum-stability": "dev",
     "prefer-stable": true,
+    "autoload": {
+        "psr-4": {
+            "Spool\\ApiInfo\\": "src/"
+        }
+    },
     "extra": {
         "laravel": {
             "providers": [
@@ -22,11 +27,6 @@
             "aliases": {
                 "ApiInfo": "Spool\\ApiInfo\\ApiInfo"
             }
-        }
-    },
-    "autoload": {
-        "psr-4": {
-            "Spool\\ApiInfo\\": "/"
         }
     }
 }
