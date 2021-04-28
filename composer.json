@@ -18,7 +18,15 @@
         "laravel": {
             "providers": [
                 "Spool\\ApiInfo\\ApiInfoProvider"
-            ]
+            ],
+            "aliases": {
+                "ApiInfo": "Spool\\ApiInfo\\ApiInfo"
+            }
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Spool\\ApiInfo\\": "/"
         }
     }
 }
