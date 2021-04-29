@@ -78,9 +78,9 @@ class ExampleController extends Controller
      *
      * @param PageRequest $request 请求 -- 参数类
      *
-     * @return  array
+     * @return  array {"code":1,"msg":"err"} -- 接口返回值示例json格式
      * @version 1.0.0 -- 接口版本号
-     * @example {"service":"ALL","qt":581,"content":{"answer":{"song":"你能看到我","album":"是的,我看见了","artist":"啊哈......","pic_url":"http://baidu.com"},"scene":"music","array":[{"log":123}]}} 成功 -- 接口返回值示例json格式
+     * @example {"code":0,"msg":"success"} -- 接口返回值示例json格式
      * @example {"code":1,"msg":"err"} 失败 -- 接口返回值示例json格式
      */
     public function getM(PageRequest $request): array
@@ -89,6 +89,18 @@ class ExampleController extends Controller
     }
 }
 ~~~
+
++ 类注释第一行是分组名称, 没有注释时将取类名作为分组名称.
++ 方法注释第一行是接口名称, 没有注释时将取方法名作为接口名称.
++ 第一行之外没有@开头的注释将作为接口介绍
++ 参数列表优先取方法定义的参数getM(PageRequest $request), 支持任意类型, 不过对自带的BaseRequest衍生的类支持最好
++ @return [type] 后面的json字符串可以解析为返回值示例.
++ @return 没有定义返回值时会提示{"Document location":"@return mixed doc","format":"json"}
++ @version 定义接口的版本号
++ @example 定义成功|失败及其他需要标注的返回值示例
++ 其他参数如GET|POST|PUT|ANY, 以及请求路径都是从路由定义里面获取的, 无需单独定义
++ 生成页面上方的输入框可以自定义要访问的域名, 如果不是本地域名需要解决跨域问题
++ http://localhost/apiinfo?modelName=default 可以指定要访问配置文件, 用于多前端接口文档的区分
 
 #### 参与贡献
 

@@ -63,7 +63,7 @@ class ExampleController extends Controller
      *
      * @param PageRequest $request 请求
      *
-     * @return  array
+     * @return  array 
      * @version 1.0.0
     //  * @example {"code":0,"msg":"ok"} 成功
     //  * @example {"code":1,"msg":"err"} 失败
