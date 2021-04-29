@@ -25,9 +25,70 @@ php artisan vendor:publish --tag=apiinfo
 #### 使用说明
 
 1.  配置说明
+>framework定义使用的框架, 目前只支持laravel, 以后会增加对其他框架的支持
+>default是要扫描的路由前缀分组, 如针对不同的前端有不同的api文档,可以定义多个
+>>prefix定义该分组要扫描的路径前缀, 如果有多个前缀可以定义多个, 都会包含在一个文档页面里
+2.  配置代码
+```
+//ApiInfo配置文件
+return [
+    'framework' => 'laravel',
+    'default' => [
+        /**
+         * 要扫描的路由前缀
+         */
+        'prefix' => ['exampleApiinfo'],
+    ],
+    'default1' => [
+        /**
+         * 要扫描的路由前缀
+         */
+        'prefix' => ['api'],
+    ],
+];
+```
+3.  页面模板
+>路径在 /resources/views/vendor/apiinfo 可以修改. 另希望能有前端贡献好看的页面模板
+
+4.  文档生成
+>样例控制器在 vendor/spool/apiinfo/src/Controllers/ExampleController.php 里面, 可以参照这个控制器来编写文档.
 >
-2.  xxxx
-3.  xxxx
+>为了便于文档生成, 提供了Spool\ApiInfo\Requests\BaseRequest Spool\ApiInfo\Requests\PageRequest两个请求类, 作为控制器的参数.
+
+5.  对比Swagger和ApiDoc
+
++ 每次修改后不需要生成静态页面, 实时修改, 实时更新, 不会因为忘记修改导致文档过时.
++ 不需要添加大量的注释来辅助文档生成, 只需填写几个常用的注释即可.
++ 完全基于PHP实现, 源代码可控.
+
+#### 注释说明:
+
+~~~
+/**
+ * 演示控制器 -- 分组名称
+ */
+class ExampleController extends Controller
+{
+    /**
+     * 演示控制器get文档 -- 接口名称
+     *
+     * 演示控制器get方法描述 -- 接口介绍
+     * 写点什么
+     * 接口简介
+     *
+     * @param PageRequest $request 请求 -- 参数类
+     *
+     * @return  array
+     * @version 1.0.0 -- 接口版本号
+     * @example {"service":"ALL","qt":581,"content":{"answer":{"song":"你能看到我","album":"是的,我看见了","artist":"啊哈......","pic_url":"http://baidu.com"},"scene":"music","array":[{"log":123}]}} 成功 -- 接口返回值示例json格式
+     * @example {"code":1,"msg":"err"} 失败 -- 接口返回值示例json格式
+     */
+    public function getM(PageRequest $request): array
+    {
+        return ['code' => 0, 'mesg' => 'ok', 'url' => $request->getBaseUrl()];
+    }
+}
+~~~
 
 #### 参与贡献
 
