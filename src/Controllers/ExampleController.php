@@ -54,7 +54,7 @@ class ExampleController extends Controller
      */
     public function getM(PageRequest $request): array
     {
-        return ['code' => 0, 'mesg' => 'ok'];
+        return ['code' => 0, 'mesg' => 'ok', 'url' => $request->getBaseUrl()];
     }
     /**
      * 首页post文档

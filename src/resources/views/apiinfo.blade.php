@@ -44,7 +44,7 @@
      </div>
          <ul class="nav nav-stacked nav-pills">
              <li role="presentation" class="active">
-                 <a href="/apiinfo">欢迎页</a>
+                 <a href="/apiinfo?modelName={{$modelName}}">欢迎页</a>
              </li>
          @foreach ($trees as $groupName => $items)
              <li role="presentation">
@@ -54,7 +54,7 @@
                  <ul class="dropdown-menu">
                  @foreach ($items as $apiName => $item)
                      <li>
-                         <a href="/apiinfo/contents?group={{$item['classGroup']}}&name={{$item['methodName']}}" target="mainFrame">{{$item['methodDoc']}}</a>
+                         <a href="/apiinfo/contents?group={{$item['classGroup']}}&name={{$item['methodName']}}&modelName={{$modelName}}" target="mainFrame">{{$item['methodDoc']}}</a>
                      </li>
                  @endforeach
                  </ul>

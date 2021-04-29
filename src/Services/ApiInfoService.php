@@ -114,7 +114,6 @@ class ApiInfoService
         $routess = [];
 
         $configPrefix = config("apiinfo.{$modelName}.prefix");
-        // var_dump($configPrefix);
         foreach ($routes as $route) {
             // var_dump($route);
             $action = $route->getAction();
@@ -126,9 +125,7 @@ class ApiInfoService
                 $method = "ANY";
             }
             $uri = $route->uri;
-            // $prefix = $action['prefix'] ?: '';
             $prefix = explode('/', $uri)[0];
-            // var_dump($prefix, $configPrefix);
             if (
                 !isset($action['controller']) ||
                 \substr($uri, 0, strlen('_ignition')) === '_ignition'
@@ -184,14 +181,14 @@ class ApiInfoService
      * 返回文档左侧树图
      * 框架默认为laravel, 后续会支持更多框架
      *
-     * @param string $framework 框架名称
+     * @param ApiInfoContentsRequest $request 请求的类
      *
      * @return array
      */
-    public function getDocTree(string $framework = ''): array
+    public function getDocTree(ApiInfoContentsRequest $request): array
     {
         $tree = $routes = [];
-        $routes = $this->getDocSearch(null, $framework);
+        $routes = $this->getDocSearch($request);
         foreach ($routes as $routeInfo) {
             $treeGroupName = $routeInfo['treeGroupName'];
             $treeApiName = $routeInfo['treeApiName'];
@@ -204,19 +201,18 @@ class ApiInfoService
     /**
      * 搜索接口信息
      *
-     * @param ?ApiInfoContentsRequest $request   要搜索的关键字
-     * @param string                  $framework 使用的框架
+     * @param ApiInfoContentsRequest $request   要搜索的关键字
      *
      * @return array
      */
     public function getDocSearch(
-        ?ApiInfoContentsRequest $request,
-        string $framework = ''
+        ApiInfoContentsRequest $request
     ): array {
         $group = $request->group ?? '';
         $name = $request->name ?? '';
         $modelName = $request->modelName ?? 'default';
         $routes = [];
+        $framework = \config('apiinfo.framework');
         if (!$framework || 'laravel' == strtolower($framework)) {
             $routes = $this->scanLaravelRoutes($modelName);
         }

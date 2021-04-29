@@ -1,11 +1,12 @@
 <?php
+
 /**
  * 请求入口格式化
- * 
+ *
  * Class ApiInfoContentsRequest 请求格式化
- * 
+ *
  * PHP version 7.2
- * 
+ *
  * @category Spool
  * @package  ApiInfo
  * @author   yydick Chen <yydick@sohu.com>
@@ -13,6 +14,7 @@
  * @link     http://url.com
  * @DateTime 2021-03-27
  */
+
 namespace Spool\ApiInfo\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
@@ -20,11 +22,11 @@ use Illuminate\Http\Exceptions\HttpResponseException;
 
 /**
  * 请求入口格式化
- * 
+ *
  * Class ApiInfoContentsRequest 请求格式化
- * 
+ *
  * PHP version 7.2
- * 
+ *
  * @category Spool
  * @package  ApiInfo
  * @author   yydick Chen <yydick@sohu.com>
@@ -54,9 +56,10 @@ class ApiInfoContentsRequest extends FormRequest
         return [
             'group' => 'nullable|string',
             'name' => 'nullable|string',
+            'modelName' => 'nullable|string',
         ];
     }
-    
+
     /**
      * Get custom messages for validator errors.
      *
@@ -67,6 +70,7 @@ class ApiInfoContentsRequest extends FormRequest
         return [
             'group' => '要调用的组',
             'name' => '要调用的名称',
+            'modelName' => '要调用的配置',
         ];
     }
 
@@ -80,13 +84,14 @@ class ApiInfoContentsRequest extends FormRequest
         return [
             'group' => 'group',
             'name' => 'name',
+            'modelName' => '要调用的配置',
         ];
     }
     /**
      * Handle a failed validation attempt.
      *
      * @param  \Illuminate\Contracts\Validation\Validator  $validator
-     * 
+     *
      * @return void
      *
      * @throws Illuminate\Http\Exceptions\HttpResponseException
@@ -95,13 +100,13 @@ class ApiInfoContentsRequest extends FormRequest
     {
         $error = $validator->errors()->first();
         // $allErrors = $validator->errors()->all(); 所有错误
- 
+
         $response = response()->json([
             'code' => 0,
             'msg'  => $error,
             // 'data' => null,
         ]);
- 
+
         throw new HttpResponseException($response);
     }
 }

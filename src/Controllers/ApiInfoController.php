@@ -55,20 +55,21 @@ class ApiInfoController extends Controller
     /**
      * 首页
      *
-     * @param Request $request 请求类
+     * @param ApiInfoContentsRequest $request 请求类
      *
      * @return void
      */
-    public function index(Request $request)
+    public function index(ApiInfoContentsRequest $request)
     {
-        $trees = $this->service->getDocTree();
+        $trees = $this->service->getDocTree($request);
         $urlAll = $request->url();
         $urlInfo = parse_url($urlAll);
-        // var_dump($urlInfo);
         $url = $urlInfo['scheme'] . '://' . $urlInfo['host'] . '/';
+        $modelName = $request->modelName ?? 'default';
         $data = [
             'trees' => $trees,
-            'url' => $url
+            'url' => $url,
+            'modelName' => $modelName
         ];
         return view('vendor.apiinfo.apiinfo', $data);
     }
@@ -82,17 +83,6 @@ class ApiInfoController extends Controller
         return view('vendor.apiinfo.welcome');
     }
     /**
-     * 测试信息
-     *
-     * @return void
-     */
-    public function test()
-    {
-        $routes = $this->service->getDocTree();
-        // return $routes;
-        return view('vendor.apiinfo.test');
-    }
-    /**
      * 内容页
      *
      * @param ApiInfoContentsRequest $request 请求的格式类
@@ -104,35 +94,17 @@ class ApiInfoController extends Controller
     public function contents(ApiInfoContentsRequest $request)
     {
         $doc = $this->service->getDocSearch($request);
-        // ini_set('xdebug.var_display_max_depth', 6);
-        // var_dump($doc);
-        // $jsonStr = $doc['docExample'][0]['location'];
-        // if (is_array($doc['docExample'])) {
-        //     $jsonStr = $this->service->getJsonFormatArray(
-        //         $this->service->jsonFormatByString(
-        //             $doc['docExample'][0]['location']
-        //         )
-        //     );
-        // echo ($jsonStr);
-        // }
         $data = $doc;
-        // $data['jsonStr'] = $jsonStr;
-        // $data['jsonStr'] = $jsonStr;
         return view('vendor.apiinfo.contents', $data);
     }
     /**
      * 搜索Api
      *
      * @param Request $request 依赖注入
-     * @param integer $i       测试变量1
-     * @param string  $f       测试变量2
      *
      * @return array
-     *
-     * @example {'code':0,'msg':'success','data':{'total':132,'page':1,'pagesize':10,'list':[{'id':1,'name':'foo'},{'id':2,'name':'bar'}]}} 成功
-     * @example location description
      */
-    public function search(Request $request, int $i, string $f = 'file'): array
+    public function search(Request $request): array
     {
         return [];
     }
