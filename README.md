@@ -29,6 +29,7 @@ php artisan vendor:publish --tag=apiinfo
 >default是要扫描的路由前缀分组, 如针对不同的前端有不同的api文档,可以定义多个
 >>prefix定义该分组要扫描的路径前缀, 如果有多个前缀可以定义多个, 都会包含在一个文档页面里
 2.  配置代码
+>config/apiinfo.php
 ```
 //ApiInfo配置文件
 return [
