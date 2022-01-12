@@ -20,14 +20,14 @@ composer require spool/apiinfo
 ```
 php artisan vendor:publish --tag=apiinfo
 ```
-打开 http://localhost/apiinfo/ 即可看到演示页面
+打开 http://localhost/apiinfo/ 即可看到演示页面。
 
 #### 使用说明
 
 1.  配置说明
->framework定义使用的框架, 目前只支持laravel, 以后会增加对其他框架的支持
->default是要扫描的路由前缀分组, 如针对不同的前端有不同的api文档,可以定义多个
->>prefix定义该分组要扫描的路径前缀, 如果有多个前缀可以定义多个, 都会包含在一个文档页面里
+>framework定义使用的框架, 目前只支持Laravel和DingoApi, 以后会逐渐增加对其他框架（如：Lumen、ThinkPHP等）的支持。
+>default是要扫描的路由前缀分组, 如针对不同的前端有不同的api文档,可以定义多个；如果是Dingo则无所谓。
+>>prefix定义该分组要扫描的路径前缀, 如果有多个前缀可以定义多个, 都会包含在一个文档页面里。
 2.  配置代码
 >config/apiinfo.php
 ```

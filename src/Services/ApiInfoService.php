@@ -97,8 +97,30 @@ class ApiInfoService
         }
         return array_values($files);
     }
+    public function scanDingoRoutes(string $modelName = 'default'): array
+    {
+        $baseRoutes = app('Dingo\Api\Routing\Router');
+        // $routes = $baseRoutes->getRoutes();
+        $routes = [];
+        foreach ($baseRoutes->getRoutes() as $collection) {
+            foreach ($collection->getRoutes() as $route) {
+                $routes[] = [
+                    // 'host' => $route->domain(),
+                    'method' => implode('|', $route->methods()),
+                    'uri' => $route->uri(),
+                    'name' => $route->getName(),
+                    'controller' => $route->getActionName(),
+                    'prefix' => explode('/', $route->uri())[0],
+                    'protected' => $route->isProtected() ? 'Yes' : 'No',
+                    'versions' => implode(', ', $route->versions()),
+                    'scopes' => implode(', ', $route->scopes()),
+                ];
+            }
+        }
+        return $routes;
+    }
     /**
-     * 扫描路由
+     * 扫描Laravel路由
      *
      * @param string $modelName 接口组名称
      *
@@ -115,7 +137,6 @@ class ApiInfoService
 
         $configPrefix = config("apiinfo.{$modelName}.prefix");
         foreach ($routes as $route) {
-            // var_dump($route);
             $action = $route->getAction();
             $methods = count($route->methods);
             $method = 'GET';
@@ -139,7 +160,6 @@ class ApiInfoService
                 ) {
                     continue;
                 }
-                // var_dump($prefix, $configPrefix);
                 if (is_array($configPrefix)) {
                     if (!in_array($prefix, $configPrefix, true)) {
                         continue;
@@ -194,8 +214,6 @@ class ApiInfoService
             $treeApiName = $routeInfo['treeApiName'];
             $tree[$treeGroupName][$treeApiName] = $routeInfo;
         }
-        // var_dump($tree);
-        // $tree = $routes;
         return $tree;
     }
     /**
@@ -213,7 +231,9 @@ class ApiInfoService
         $modelName = $request->modelName ?? 'default';
         $routes = [];
         $framework = \config('apiinfo.framework');
-        if (!$framework || 'laravel' == strtolower($framework)) {
+        if ('dingo' == \strtolower($framework)) {
+            $routes = $this->scanDingoRoutes($modelName);
+        } else {
             $routes = $this->scanLaravelRoutes($modelName);
         }
         foreach ($routes as $key => $route) {
@@ -253,7 +273,7 @@ class ApiInfoService
             $subDoc = $this->scanDocument($className, $methodName);
             $methodDoc = array_values(array_filter(explode('*', str_replace(["\n", "/"], '', $subDoc)), "trim"));
             // echo "{$subDoc}\n";
-            // var_dump($methodDoc);
+            // dd($methodDoc);
             $apiGroup = $apiName = '';
             foreach ($methodDoc as $keyMethod => $value) {
                 if (!$keyMethod) {
@@ -271,13 +291,13 @@ class ApiInfoService
             }
             $params = $this->getMethodParams($className, $methodName);
             $routes[$key]['className'] = $className;
-            $routes[$key]['classDoc'] = $classDoc[0];
+            $routes[$key]['classDoc'] = $classDoc[0] ?? '';
             $routes[$key]['classGroup'] = end($classGroup);
             $routes[$key]['methodName'] = $methodName;
             $routes[$key]['methodDoc'] = trim($methodDoc[0] ?? '') ?: $methodName;
             $routes[$key]['apiGroup'] = $apiGroup ?: end($classGroup);
             $routes[$key]['apiName'] = $apiName ?: $methodName;
-            $routes[$key]['treeGroupName'] = $apiGroup ?: $classDoc[0];
+            $routes[$key]['treeGroupName'] = $apiGroup ?: $classDoc[0] ?? '';
             $routes[$key]['treeApiName'] = $apiName ?: $methodName;
             $routes[$key]['params'] = $params['params'];
             $routes[$key]['return'] = $params['return'];
@@ -323,8 +343,8 @@ class ApiInfoService
             if ($docArray[0] == '@param') {
                 // var_dump($docArray);
                 $docTmp['name'] = substr($docArray[2], 1);
-                $docTmp['type'] = $docArray[1];
-                $docTmp['doc'] = $docArray[3];
+                $docTmp['type'] = $docArray[1] ?? '';
+                $docTmp['doc'] = $docArray[3] ?? '';
                 $docTmp['form'] = 'form';
                 $docParams[$docTmp['name']] = $docTmp;
                 continue;
@@ -363,6 +383,9 @@ class ApiInfoService
             $tmp = [];
             $tmp['name'] = $value->name;
             $type = $value->hasType() ? $value->getType()->getName() : 'mixed';
+            if ($type == 'mixed' && $docParams[$value->name]['type']) {
+                $type = $docParams[$value->name]['type'];
+            }
             $tmp['type'] = $type;
             $tmp['form'] = 'form';
             $tmp['required'] = 'required';
