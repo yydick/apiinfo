@@ -102,15 +102,35 @@ class ApiInfoService
         $baseRoutes = app('Dingo\Api\Routing\Router');
         // $routes = $baseRoutes->getRoutes();
         $routes = [];
+        $prefixConfig = config("apiinfo.{$modelName}.prefix");
         foreach ($baseRoutes->getRoutes() as $collection) {
             foreach ($collection->getRoutes() as $route) {
+                $uri = $route->uri();
+                if (!$uri) {
+                    continue;
+                }
+                $prefixExplode = explode('/', $uri);
+                if (!isset($prefixExplode[0])) {
+                    continue;
+                }
+                $prefix = $prefixExplode[0];
+                if (is_array($prefixConfig) && !in_array($prefix, $prefixConfig)) {
+                    continue;
+                }
+                if (\is_string($prefixConfig) && $prefix != $prefixConfig) {
+                    continue;
+                }
+                $versionImplode = $route->versions();
+                if (!$versionImplode) {
+                    continue;
+                }
                 $routes[] = [
                     // 'host' => $route->domain(),
                     'method' => implode('|', $route->methods()),
                     'uri' => $route->uri(),
                     'name' => $route->getName(),
                     'controller' => $route->getActionName(),
-                    'prefix' => explode('/', $route->uri())[0],
+                    'prefix' => $prefix,
                     'protected' => $route->isProtected() ? 'Yes' : 'No',
                     'versions' => implode(', ', $route->versions()),
                     'scopes' => implode(', ', $route->scopes()),
