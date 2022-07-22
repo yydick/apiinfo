@@ -445,6 +445,7 @@ class ApiInfoService
     {
         $data = [];
         $reflect = new ReflectionClass($className);
+        $needParames = $reflect->getMethod('__construct')->getParameters();
         $params = [];
         if ($needParames) {
             foreach ($needParames as $param) {
