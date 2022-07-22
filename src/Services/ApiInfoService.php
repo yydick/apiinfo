@@ -445,8 +445,40 @@ class ApiInfoService
     {
         $data = [];
         $reflect = new ReflectionClass($className);
-        $obj = new $className();
-        // var_dump($obj instanceof FormRequest, $className);
+        $params = [];
+        if ($needParames) {
+            foreach ($needParames as $param) {
+                if ($param->isDefaultValueAvailable()) {
+                    continue;
+                }
+                $paramType = $param->getType();
+                $value = null;
+                if ($paramType->isBuiltin()) {
+                    switch (strtolower($paramType->getName())) {
+                        case 'string':
+                            $value = '';
+                            break;
+                        case 'bool':
+                        case 'boolean':
+                            $value = true;
+                            break;
+                        case 'int':
+                        case 'integer':
+                            $value = 0;
+                            break;
+                        case 'float':
+                            $value = 0.0;
+                            break;
+                    }
+                }
+                $params[$param->getName()] = $value;
+            }
+        }
+        try {
+            $obj = $reflect->newInstanceArgs($params);
+        } catch (\Exception $e) {
+            return [];
+        }
         if ($obj instanceof FormRequest) {
             $rules = $reflect->hasMethod('rules') ? $obj->rules() : [];
             $messages = $reflect->hasMethod('messages') ? $obj->messages() : [];
