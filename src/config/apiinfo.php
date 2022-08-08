@@ -14,6 +14,6 @@ return [
         'namespace' => '',
         'cachePath' => storage_path(),
         'cacheTimeOut' => 0,
-        ''
+        'framework' => 'dingo',
     ],
 ];

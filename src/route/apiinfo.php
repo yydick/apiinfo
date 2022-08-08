@@ -38,23 +38,23 @@ Route::group(
                 Route::get(
                     'getM',
                     'ExampleController@getM'
-                )->name('api.v1.index.getM');
+                )->name('api.example.index.getM');
                 Route::post(
                     'postM',
                     'ExampleController@postM'
-                )->name('api.v1.index.postM');
+                )->name('api.example.index.postM');
                 Route::put(
                     'putM',
                     'ExampleController@putM'
-                )->name('api.v1.index.putM');
+                )->name('api.example.index.putM');
                 Route::delete(
                     'deleteM',
                     'ExampleController@deleteM'
-                )->name('api.v1.index.deleteM');
+                )->name('api.example.index.deleteM');
                 Route::any(
                     'anyM',
                     'ExampleController@anyM'
-                )->name('api.v1.index.anyM');
+                )->name('api.example.index.anyM');
             });
         });
     }
