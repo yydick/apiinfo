@@ -103,21 +103,20 @@ class ApiInfoService
         // $routes = $baseRoutes->getRoutes();
         $routes = [];
         $prefixConfig = config("apiinfo.{$modelName}.prefix");
+        // dd($baseRoutes->getRoutes());
         foreach ($baseRoutes->getRoutes() as $collection) {
             foreach ($collection->getRoutes() as $route) {
                 $uri = $route->uri();
                 if (!$uri) {
                     continue;
                 }
-                $prefixExplode = explode('/', $uri);
-                if (!isset($prefixExplode[0])) {
-                    continue;
+                $hasPrefix = false;
+                foreach ($prefixConfig as $prefix) {
+                    if ($prefix == substr($uri, 0, strlen($prefix))) {
+                        $hasPrefix = true;
+                    }
                 }
-                $prefix = $prefixExplode[0];
-                if (is_array($prefixConfig) && !in_array($prefix, $prefixConfig)) {
-                    continue;
-                }
-                if (\is_string($prefixConfig) && $prefix != $prefixConfig) {
+                if (!$hasPrefix) {
                     continue;
                 }
                 $versionImplode = $route->versions();
@@ -234,6 +233,7 @@ class ApiInfoService
             $treeApiName = $routeInfo['treeApiName'];
             $tree[$treeGroupName][$treeApiName] = $routeInfo;
         }
+        // dd($tree);
         return $tree;
     }
     /**
@@ -250,7 +250,7 @@ class ApiInfoService
         $name = $request->name ?? '';
         $modelName = $request->modelName ?? 'default';
         $routes = [];
-        $framework = \config('apiinfo.framework');
+        $framework = \config('apiinfo.' . $modelName . '.framework');
         if ('dingo' == \strtolower($framework)) {
             $routes = $this->scanDingoRoutes($modelName);
         } else {
@@ -271,12 +271,18 @@ class ApiInfoService
                 $methodName = $callback[1];
             }
             $classGroup = explode('\\', $className);
+            $groupClass = $className;
+            $groupClass .= isset($route['versions']) ? \is_string($route['versions']) ? $route['versions'] : \implode('', $route['versions']) : '';
+            // dd($route, $group, $classGroup);
             if (
-                ($group && end($classGroup) != $group) ||
+                ($group && $groupClass != $group) ||
                 ($name && $methodName != $name)
             ) {
                 continue;
             }
+            // dd($group, $groupClass);
+            $groupAfter = $groupClass;
+            $groupClass = \urlencode($groupClass);
             $doc = $this->scanDocument($className);
             $classDoc = array_values(
                 array_filter(
@@ -311,8 +317,9 @@ class ApiInfoService
             }
             $params = $this->getMethodParams($className, $methodName);
             $routes[$key]['className'] = $className;
-            $routes[$key]['classDoc'] = $classDoc[0] ?? '';
+            // $routes[$key]['classDoc'] = $classDoc[0] ?? '';
             $routes[$key]['classGroup'] = end($classGroup);
+            $routes[$key]['classGroup'] = $groupClass;
             $routes[$key]['methodName'] = $methodName;
             $routes[$key]['methodDoc'] = trim($methodDoc[0] ?? '') ?: $methodName;
             $routes[$key]['apiGroup'] = $apiGroup ?: end($classGroup);
@@ -327,15 +334,17 @@ class ApiInfoService
             $routes[$key]['docReturn'] = $params['docReturn'];
             $routes[$key]['docExample'] = $params['docExample'];
             $routes[$key]['docVersion'] = $params['docVersion'];
+            // dd($group, $name, $groupAfter, $methodName, $request->all());
             if (
                 $group &&
                 $name &&
-                $routes[$key]['classGroup'] == $group &&
+                $groupAfter == $group &&
                 $methodName == $name
             ) {
                 return $routes[$key];
             }
         }
+        // dump($routes);
         return $routes;
     }
     /**

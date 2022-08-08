@@ -95,6 +95,10 @@ class ApiInfoController extends Controller
     {
         $doc = $this->service->getDocSearch($request);
         $data = $doc;
+        if (!$data) {
+            return;
+        }
+        // dd($data, $request->all());
         return view('vendor.apiinfo.contents', $data);
     }
     /**
